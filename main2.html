@@ -1,0 +1,334 @@
+<html>
+<head>
+    <title>threejs - lights</title>
+
+    <style>
+    	body{
+    		margin: 0;
+    		overflow: hidden;
+    	}
+    </style>
+</head>
+<body>
+
+    <canvas id="myCanvas"></canvas>
+    <script src="three.js"></script>
+    <script src="Detector.js"></script>
+    <script src="OrbitControls.js"></script>
+    <script src="Stats.js"></script>
+    <script src="KeyboardState.js"></script>
+    <script src="UnpackDepthRGBAShader.js"></script>
+    <script src="ShadowMapViewer.js"></script>
+
+    <script>
+
+    var renderer,
+    	scene,
+    	camera,
+    	myCanvas = document.getElementById('myCanvas');
+
+    //RENDERER
+    renderer = new THREE.WebGLRenderer({
+      canvas: myCanvas,
+      antialias: true
+    });
+    renderer.setClearColor(0x000000);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    //SCENE
+    scene = new THREE.Scene();
+
+    // custom global variables
+var mirrorCube, mirrorCubeCamera; // for mirror material
+var mirrorSphere, mirrorSphereCamera; // for mirror material
+
+    //MATERIAL
+
+    var material = new THREE.MeshStandardMaterial({
+    //  wireframe: true,//false,
+      color: 0xff0000,
+      roughness: 0.25,
+      metalness: 0.5
+    });
+
+    var material1 = new THREE.MeshStandardMaterial({
+    //wireframe: true,//false,
+      color: 0x00ff00,
+      roughness: 0.25,
+      metalness: 0.5
+    });
+    var material2 = new THREE.MeshPhongMaterial();
+    var material3 = new THREE.MeshStandardMaterial();
+
+    var  material4 = new THREE.MeshNormalMaterial({
+   wireframe: false,
+   wireframeLineWidth: 1,
+   morphTargets: false,
+   transparent: true,//false,
+   opacity: 1,
+   depthTest: true,
+   depthWrite: true,
+   depthFunc: THREE.LessEqualDepth,
+   blending: THREE.NormalBlending,
+   blendSrc: THREE.SrcAlphaFactor,
+   blendDst: THREE.OneMinusSrcAlphaFactor,
+   blendEquation: THREE.AddEquation,
+   polygonOffset: true,//false,
+   polygonOffsetFactor: 0,
+   polygonOffsetUnits: 0,
+   clippingPlanes: null,
+   clipShadows: false,
+   overdraw: 0,
+   needsUpdate: false,
+   alphaTest: 0,
+   visible: true,
+   side: THREE.FrontSide //THREE.BackSide, THREE.DoubleSide
+ });
+
+    //GEOMETRY
+
+    var geometry = new THREE.BoxGeometry(100, 100, 100);
+    geometry.computeLineDistances();
+    var mesh = new THREE.Mesh(geometry, material1);
+    mesh.position.z = 0;
+    mesh.position.x = 0;
+    mesh.position.y = 100;
+    //scene.add(mesh);
+
+    function tiles(MeSH, x, size, Sx, Sy, Sz, n, d1, d2, d3){
+      if (n == 0){
+            x = MeSH.clone();
+            x.scale.set(size, size, size);
+            x.position.set(Sx+d1, Sy+d2, Sz+d3);
+            scene.add(x);
+      }else{
+            x = MeSH.clone();
+            x.scale.set(size, size, size);
+            x.position.set(Sx+d1, Sy+d2, Sz+d3);
+            scene.add(x);
+        tiles(MeSH, x, size*0.7, Sx*0.08 + Sx, Sy*0.08 + Sy, Sz*0.08 + Sz, n-1, d1, d2, d3);
+      }
+    }
+
+
+    var geometry2 = new THREE.SphereBufferGeometry(50, 15, 15);
+    var mesh2 = new THREE.Mesh(geometry2, material);
+    mesh2.position.z = 300;
+    mesh2.position.y = 600*5 + 300;
+    mesh2.position.x = 300;
+  //  mesh2.scale.set(0.1, 0.1, 0.1);
+    scene.add(mesh2);
+
+
+    var geometry3 = new THREE.PlaneGeometry(100000, 100000, 100, 100);
+    var mesh3 = new THREE.Mesh(geometry3, material3);
+    mesh3.rotation.x = -90 * (Math.PI / 180);
+    mesh3.position.y = -200;
+    //scene.add(mesh3);
+
+
+    //shadows
+     renderer.shadowMap.enabled = true;
+     renderer.shadowMap.type = THREE.PCFShadowMap;
+    //
+     var light = new THREE.SpotLight(0xffffff, 4.0, 3000);
+     //light.position.y = 1000;
+     //light.position.z = 1000;
+     light.target = mesh2;
+
+     light.castShadow = true;
+     light.shadow = new THREE.LightShadow( new THREE.PerspectiveCamera(1000, window.innerWidth / window.innerHeight, 1, 1000000 ) );
+	   light.shadow.bias = 0.0001;
+     light.shadow.mapSize.width = 3048 * 2;
+     light.shadow.mapSize.height = 3048 * 2;
+     scene.add(light);
+
+    //
+     mesh2.castShadow = true;
+     mesh3.receiveShadow = true;
+     //mesh2.receiveShadow = true;
+
+     function cells(MeSH, x, size, Sx, Sy, Sz, n, d1, d2, d3){
+
+           x[0] = MeSH.clone();
+           x[0].scale.set(5*size, size, size);
+           x[0].position.set(300+d1, d2, d3);
+           scene.add(x[0]);
+
+           x[1] = MeSH.clone();
+           x[1].scale.set(size, size, 5*size);
+           x[1].position.set(d1, d2, 300+d3);
+          // x[1] = new THREE.Mesh(geometry2, material1);
+           scene.add(x[1]);
+
+           x[2] = MeSH.clone();
+           x[2].scale.set(size, 5*size, size);
+           x[2].position.set(d1, 300 + d2, d3);
+           scene.add(x[2]);
+     }
+
+     function cylinderSpace(MeSH, x, size, Sx, Sy, Sz, n, d1, d2, d3){
+       var slice = 20;
+          for(var R = 1; R < 5; R++)
+          {
+            var step = (2*Math.PI)/(slice*R);
+            for(var I = 0; I < slice*R; I++){
+              x[I] = MeSH.clone();
+              x[I].scale.set(size, size, size);
+              x[I].position.set(-R*300*Math.cos(step*I) -  d1,  R*300*Math.sin(step*I) + d2, d3);
+              scene.add(x[I]);
+            }
+          }
+            // x[1] = MeSH.clone();
+            // x[1].scale.set(size, size, size);
+            // x[1].position.set(300*Math.cos(step*1) + d1, 300 + d2,  300*Math.sin(step*1) +   d3);
+            // scene.add(x[1]);
+            //
+            // x[2] = MeSH.clone();
+            // x[2].scale.set(size, size, size);
+            // x[2].position.set(300*Math.cos(step*2) + d1, 300 + d2,  300*Math.sin(step*2) +   d3);
+            // scene.add(x[2]);
+
+     }
+
+
+var s3 = [];
+var s4 = [];
+var s5 = [];
+
+   for(var l = -10; l < 11; l++)
+   for(var j =   0; j < 11; j++)
+   for(var i = -10; i < 11; i++)
+   cells(mesh, s3, 1, 50.0, 0.0, 0.0, 1, 600*i, 600*j, 600*l);
+
+for(var i = 0; i < 20; i++)
+   //cylinderSpace(mesh2, s5, 1, 0.0, 0.0, 0.0, 1, 0.0, 0.0,-300*i);
+
+
+     var s1 = [];
+     var s2 = [];
+     for(var k = -10; k < 11; k++)
+     for(var j = 0; j < 10; j++)
+     for(var i = -10; i < 11; i++){
+
+         s1[i] = mesh.clone();
+
+           s1[i] = new THREE.Mesh(geometry, material1);
+
+         s1[i].position.set(mesh2.position.x + 800*i, mesh2.position.y + 200*j, mesh2.position.z + 100*k);
+      //  scene.add(s1[i]);
+     }
+var size = 2.0;
+      for(var k =-30; k < 31; k++)
+      for(var j = 0; j < 31; j++)
+      for(var i =-30; i < 31; i++){
+          s4[i] = mesh.clone();
+          s4[i] = new THREE.Mesh(geometry, material4);
+          s4[i].position.set(600*i + 300, 600*j + 300, 600*k + 300);
+          s4[i].scale.set(4*size, 4*size, 4*size);
+
+          if(k%2 == 0)
+          if(j%2 == 0)
+          if(i%2 == 0)
+         scene.add(s4[i]);
+      }
+
+    //cameras
+
+
+    //perspective camera
+    camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, 5000 );
+    var keyboard = new KeyboardState();
+    var clock = new THREE.Clock();
+    var velocidad = 500;
+    //camera.position.x = mesh2.position.x;//Math.sin(delta) * 1500;
+    //camera.position.z = mesh2.position.z + 1000;//Math.cos(delta) * 1500;
+
+    //RENDER LOOP
+animate();
+
+function animate() {
+    requestAnimationFrame( animate );
+          size -= 1;
+	  render();
+	  update();
+}
+
+    function update(){
+      light.position.y = mesh2.position.y;
+      light.position.z = mesh2.position.z + 100;
+      light.position.x = mesh2.position.x - 1000;
+
+
+    /*
+mirrorSphere.visible = false;
+mirrorSphereCamera.updateCubeMap( renderer, scene );
+mirrorSphere.visible = true;*/
+
+keyboard.update();
+
+
+if ( keyboard.pressed("V") )
+velocidad += 10;
+if ( keyboard.pressed("C") )
+velocidad -= 10;
+var delta = clock.getDelta(); // seconds.
+var moveDistance = velocidad * delta; // 200 pixels per second
+var rotateAngle = Math.PI / 2 * delta;   // pi/2 radians (90 degrees) per second
+
+// local transformations
+// move forwards/backwards/left/right
+if ( keyboard.pressed("W") )
+mesh2.translateZ( -moveDistance );
+if ( keyboard.pressed("S") )
+mesh2.translateZ(  moveDistance );
+if ( keyboard.pressed("Q") )
+mesh2.translateX( -moveDistance );
+if ( keyboard.pressed("E") )
+mesh2.translateX(  moveDistance );
+
+/*if ( keyboard.pressed("up") )
+mesh2.position.y += moveDistance;
+if ( keyboard.pressed("down") )
+mesh2.position.y -= moveDistance;*/
+// rotate left/right/up/down
+var rotation_matrix = new THREE.Matrix4().identity();
+if ( keyboard.pressed("A") )
+mesh2.rotateOnAxis( new THREE.Vector3(0,1,0), rotateAngle);
+if ( keyboard.pressed("D") )
+mesh2.rotateOnAxis( new THREE.Vector3(0,1,0), -rotateAngle);
+if ( keyboard.pressed("up") )
+mesh2.translateY(  moveDistance );
+if ( keyboard.pressed("down") )
+mesh2.translateY( -moveDistance );
+
+if ( keyboard.pressed("right") )
+mesh2.translateY(  moveDistance );//mesh2.rotateOnAxis( new THREE.Vector3(1,0,0), rotateAngle);
+if ( keyboard.pressed("left") )
+mesh2.translateY( -moveDistance );//mesh2.rotateOnAxis( new THREE.Vector3(1,0,0), -rotateAngle);
+
+
+if ( keyboard.pressed("Z") )
+{
+mesh2.position.set(0,25.1,0);
+mesh2.rotation.set(0,0,0);
+}
+
+var relativeCameraOffset = new THREE.Vector3(0, 0, 400);
+var cameraOffset = relativeCameraOffset.applyMatrix4( mesh2.matrixWorld );
+camera.position.x = cameraOffset.x;
+camera.position.y = cameraOffset.y;
+camera.position.z = cameraOffset.z;
+camera.lookAt( mesh2.position );
+
+stats.update();
+    }
+
+    function render() {
+    	renderer.render(scene, camera);
+    }
+
+    </script>
+</body>
+</html>
