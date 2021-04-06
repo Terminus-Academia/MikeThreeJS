@@ -1,6 +1,6 @@
 <html>
 <head>
-      <title>threejs - lights</title>
+      <title>MikeThreeJS</title>
 
       <style>
     	       body{
@@ -25,6 +25,7 @@
       <script src="KeyboardState.js"></script>
       <script src="UnpackDepthRGBAShader.js"></script>
       <script src="ShadowMapViewer.js"></script>
+      <script src="auxFunctions.js"></script>
 
 
 
@@ -37,7 +38,7 @@
       //  BASIC GLOBAL VARIABLES
       //////////////////////////
 
-    var renderer, scene, camera, 
+    var renderer, scene, camera,
         myCanvas = document.getElementById('myCanvas');
 
     //////////////////////////
@@ -50,21 +51,49 @@
 
     renderer.setClearColor(0x000000);
     renderer.setPixelRatio(window.devicePixelRatio);
+    //renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setSize(window.innerWidth, window.innerHeight);
-
     //////////////////////////
     // INIT SCENE VARIABLE
     //////////////////////////
     scene = new THREE.Scene();
 
-    
+
     //////////////////////////
     //  MATERIAL TO COVER OUR OBJECTS, 3 EXAMPLES
     //////////////////////////
 
     var material = new THREE.MeshStandardMaterial({
     //  wireframe: true,//false,
-      color: 0xff00ff,
+      color: 0xff0000,
+      roughness: 0.25,
+      metalness: 0.5
+    });
+
+    var redMaterial = new THREE.MeshStandardMaterial({
+    //  wireframe: true,//false,
+      color: 0xff0000,
+      roughness: 0.25,
+      metalness: 0.5
+    });
+
+    var greenMaterial = new THREE.MeshStandardMaterial({
+    //  wireframe: true,//false,
+      color: 0x00ff00,
+      roughness: 0.25,
+      metalness: 0.5
+    });
+
+    var blueMaterial = new THREE.MeshStandardMaterial({
+    //  wireframe: true,//false,
+      color: 0x0000ff,
+      roughness: 0.25,
+      metalness: 0.5
+    });
+
+    var blackMaterial = new THREE.MeshStandardMaterial({
+    //  wireframe: true,//false,
+      color: 0x000000,
       roughness: 0.25,
       metalness: 0.5
     });
@@ -78,7 +107,30 @@
     var material2 = new THREE.MeshPhongMaterial();
     var material3 = new THREE.MeshStandardMaterial();
 
-
+    var material9 = new THREE.MeshNormalMaterial({
+wireframe: false,
+wireframeLineWidth: 1,
+morphTargets: false,
+transparent: false,
+opacity: 1,
+depthTest: true,
+depthWrite: true,
+depthFunc: THREE.LessEqualDepth,
+blending: THREE.NormalBlending,
+blendSrc: THREE.SrcAlphaFactor,
+blendDst: THREE.OneMinusSrcAlphaFactor,
+blendEquation: THREE.AddEquation,
+polygonOffset: false,
+polygonOffsetFactor: 0,
+polygonOffsetUnits: 0,
+clippingPlanes: null,
+clipShadows: false,
+overdraw: 0,
+needsUpdate: false,
+alphaTest: 0,
+visible: true,
+side: THREE.FrontSide//THREE.BackSide //THREE.FrontSide, THREE.DoubleSide
+});
 
 
 
@@ -87,7 +139,7 @@
     //  SET UP OBJECTS HERE
     //////////////////////////
 
-  
+
 
 
 
@@ -98,22 +150,99 @@
 
     var geometry2 = new THREE.SphereBufferGeometry(50, 20, 20);
     var mesh2 = new THREE.Mesh(geometry2, material);
-    mesh2.position.z = 0;
-    mesh2.position.y = 0;
-    mesh2.position.x = 0;
-    //mesh2.scale.set(0.1, 0.1, 0.1);
+    mesh2.position.z = -700;
+    mesh2.position.y = 200;
+    mesh2.position.x = -500;
+    mesh2.scale.set(0.5, 0.5, 0.5);
+    mesh2.rotateY(3.141592*1.35);
     scene.add(mesh2);
+
+    var origin = new THREE.Mesh(geometry2, material1);
+    origin.position.z = 0;
+    origin.position.y = 0;
+    origin.position.x = 0;
+    origin.scale.set(0.25, 0.25, 0.25);
+    scene.add(origin);
+
+    //////////////////////////
+    //  SETTING UP Red Cylinder
+    //////////////////////////
+
+    var cyl = new THREE.CylinderGeometry( 5, 5, 10000, 32 );
+    var meshCylinderY = new THREE.Mesh(cyl, blueMaterial);
+    meshCylinderY.position.z = 0;
+    meshCylinderY.position.y = 0;
+    meshCylinderY.position.x = 0;
+
+    meshCylinderY.rotateX ( 3.141592 * 0.5);
+    scene.add(meshCylinderY);
+
+    var meshCylinderX = new THREE.Mesh(cyl, redMaterial);
+    meshCylinderX.position.z = 0;
+    meshCylinderX.position.y = 0;
+    meshCylinderX.position.x = 0;
+
+    meshCylinderX.rotateZ ( 3.141592 * 0.5);
+    scene.add(meshCylinderX);
+
+    var meshCylinderZ = new THREE.Mesh(cyl, greenMaterial);
+    meshCylinderZ.position.z = 0;
+    meshCylinderZ.position.y = 0;
+    meshCylinderZ.position.x = 0;
+
+    scene.add(meshCylinderZ);
+
+    ///////Arista Prototype//////
+
+    var targetA = new THREE.Vector3( 0.0, 0.0, 0.0 );
+    var targetB = new THREE.Vector3( 100.0, 200.0, 200.0);
+    var targetC = new THREE.Vector3( targetB.x - targetA.x, targetB.y - targetA.y, targetB.z - targetA.z);
+    var longitud = targetA.distanceTo( targetB );
+
+    var X = targetC.x;
+    var Y = targetC.y;
+    var Z = targetC.z;
+
+    if (equalRealS(X, 0.0)) X = 0.00001;
+
+    var YDX = Y/X;
+    var PHI = Math.atan(YDX);
+    var THETA = Math.acos(Z/longitud);
+
+    if (X < 0.0) THETA *= -1;
+
+    var sphereC = new THREE.Mesh(geometry2, material);
+    sphereC.position.z = targetC.z;
+    sphereC.position.y = targetC.y;
+    sphereC.position.x = targetC.x;
+    sphereC.scale.set(0.25, 0.25, 0.25);
+    scene.add(sphereC);
+
+    var cyl0 = new THREE.CylinderGeometry( 10, 10, longitud, 32 );
+    var target = new THREE.Mesh(cyl0, material1);
+    target.position.y = longitud * 0.5;
+    //target.position.z = targetC.z * 0.5;
+    //target.position.x = targetC.x * 0.5;
+
+    var axis = new THREE.Vector3(0, 0, 1);
+    //var rotWorldMatrix = new THREE.Matrix4();
+    //rotWorldMatrix.makeRotationZ(THETA);
+    //rotWorldMatrix.multiply(target.matrix); // pre-multiply
+    //target.matrix = rotWorldMatrix;
+    //target.setRotationFromMatrix(target.matrix);
+    //target.rotateOnWorldAxis(axis, THETA);
+    //scene.add(target);
 
     //////////////////////////
     //  SETTING UP FLOOR
     //////////////////////////
 
     var geometry3 = new THREE.PlaneGeometry(100000, 100000, 100, 100);
-    var mesh3 = new THREE.Mesh(geometry3, material3);
+    var mesh3 = new THREE.Mesh(geometry3, material9);
     mesh3.rotation.x = -90 * (Math.PI / 180);
-    mesh3.position.y = -200;
+    mesh3.position.y = -700;
     scene.add(mesh3);
-    
+    mesh3.visible = false;
 
     //////////////////////////
       //  SHADOW CASTER
@@ -144,23 +273,105 @@
       //////////////////////////
 
      var s1 = [];
-     var s2 = [];
-     for(var k = -10; k < 11; k++)
-     for(var j = 0; j < 10; j++)
-     for(var i = -10; i < 11; i++){
-       if((i+j+k)%2 == 0){
-         s1[i] = mesh2.clone();
-         if(i%2 == 0){
-           s1[i] = new THREE.Mesh(geometry2, material1);
 
-          s1[i].position.set(mesh2.position.x + 200*i, mesh2.position.y + 200*j, mesh2.position.z + 200*k);
-          scene.add(s1[i]);
+    s1[0] = new THREE.Mesh(geometry2, blueMaterial);
+    s1[0].position.set(0.0, 0.0, 200);
+    s1[0].scale.set(0.5, 0.5, 0.5);
+    scene.add(s1[0]);
 
-        }
-       }
-     }
+    s1[1] = new THREE.Mesh(geometry2, redMaterial);
+    s1[1].position.set(200, 0.0, 0.0);
+    s1[1].scale.set(0.5, 0.5, 0.5);
+    scene.add(s1[1]);
+
+    s1[2] = new THREE.Mesh(geometry2, blueMaterial);
+    s1[2].position.set(100, 100, 100);
+    s1[2].scale.set(0.5, 0.5, 0.5);
+    scene.add(s1[2]);
+
+    var points = [];
+    var moveD = [];
+    var moveDPrime = [];
+    var TARGETPOS = new THREE.Vector3(0, 100, 0);
 
 
+    var gamma = new THREE.Vector3(0.01, 0, 0);
+    var radius = 1000;
+    var rest = new THREE.Vector3(0.01, 0, 0);
+    var rest0 = new THREE.Vector3(0.01, 0, 0);
+    var rest1 = new THREE.Vector3(0.01, 0, 0);
+    var aux = new THREE.Vector3(0.01, 0, 0);
+
+    const M = 20;
+    const N = 20;
+    const K = 10;
+
+    var rot = 0.0;
+    var rot0 = 0.0;
+    var sizeBall = 0.5;
+    var sizeBallInv = 500;
+    var bigR = 400;
+    var smallR = 100;
+    var camT = 0.0;
+    var camR = 700;
+    var camH = 200;
+
+    function inversion(DIANA, GAMMA, RADIUS) {
+      let REST = new THREE.Vector3(0, 0, 0);
+      let d = DIANA.distanceTo (GAMMA);
+      let check = Math.sqrt((d - RADIUS) * (d - RADIUS));
+
+      if (check < 1e-20) {}
+      else {
+        let dd = (RADIUS * RADIUS)/d;
+        REST.subVectors(DIANA, GAMMA);
+        REST.normalize();
+        REST.multiplyScalar ( dd );
+        DIANA.addVectors(REST, GAMMA);
+      }
+
+      return DIANA;
+    }
+
+
+    ////////////////////
+    //
+    //  PARTICLE INIT
+    //
+    ///////////////////
+    for (let i = 0; i < M; i++) {
+      points[i] = [];
+      moveD[i] = [];
+      moveDPrime[i] = [];
+
+      for (let j = 0; j < N; j++) {
+        points[i][j] = [];
+        moveD[i][j] = [];
+        moveDPrime[i][j] = [];
+        for (let k = 0; k < K; k++) {
+
+                if (k%2 == 0) points[i][j][k] = new THREE.Mesh(geometry2, material1);
+
+                if (k%2 == 1)  points[i][j][k] = new THREE.Mesh(geometry2, material9);
+
+
+
+            moveD[i][j][k] = new THREE.Vector3(0, 0, 0);
+            points[i][j][k].position.set(50 * i, 50 * k, 50 * j);
+            moveDPrime[i][j][k] = new THREE.Vector3(200 * i, 200 * k, 200 * j - 300);
+            moveDPrime[i][j][k] = inversion(moveDPrime[i][j][k], gamma, radius);
+            moveD[i][j][k].subVectors ( TARGETPOS, points[i][j][k].position);
+            moveD[i][j][k].normalize();
+
+            points[i][j][k].scale.set(0.23, 0.23, 0.23);
+            scene.add(points[i][j][k]);
+      }}
+    }
+
+    sphere00 = new THREE.Mesh(geometry2, greenMaterial);
+    sphere00.position.set(0.0, 200, 0.0);
+    sphere00.scale.set(0.25, 0.25, 0.25);
+    scene.add(sphere00);
      //////////////////////////
       //  PERSPECTIVE CAMERA
       //////////////////////////
@@ -169,8 +380,8 @@
     camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, 5000 );
     var keyboard = new KeyboardState();
     var clock = new THREE.Clock();
-
-
+    camera.position.y = 200;
+    mesh2.visible = false;
     //////////////////////////
       //  LOOP
       //////////////////////////
@@ -200,54 +411,221 @@
     var delta = clock.getDelta(); // seconds.
     var moveDistance = 400 * delta; // 200 pixels per second
     var rotateAngle = Math.PI / 2 * delta;   // pi/2 radians (90 degrees) per second
-    var epsilon = 0.01;
+    var epsilon = 0.5;
 
     // local transformations
     // move forwards/backwards/left/right
 
     if (keyboard.pressed("O"))
       mesh2.scale.set(mesh2.scale.x + epsilon, mesh2.scale.y + epsilon, mesh2.scale.z + epsilon);
-    
+
     if (keyboard.pressed("P"))
       mesh2.scale.set(mesh2.scale.x - epsilon, mesh2.scale.y - epsilon, mesh2.scale.z - epsilon);
-    
+
     if ( keyboard.pressed("W") )
       mesh2.translateZ( -moveDistance );
-    
+
     if ( keyboard.pressed("S") )
       mesh2.translateZ(  moveDistance );
-    
-    if ( keyboard.pressed("Q") )
-      mesh2.translateX( -moveDistance );
-    
-    if ( keyboard.pressed("E") )
-      mesh2.translateX(  moveDistance );
-    /*if ( keyboard.pressed("up") )
-    mesh2.position.y += moveDistance;
-    if ( keyboard.pressed("down") )
-    mesh2.position.y -= moveDistance;*/
+
+
+
+      if ( keyboard.pressed("L") ) {
+        sizeBallInv += 1;
+        for (let i = 0; i < M; i++) {
+          for (let j = 0; j < N; j++)
+          for (let k = 0; k < K; k++) {
+
+                let mo = new THREE.Vector3(200 * i, 200 * k, 200 * j - 300);
+                moveDPrime[i][j][k] = inversion(mo, new THREE.Vector3(0, 700*Math.cos(0.1*sizeBallInv), 0), radius);
+                moveD[i][j][k].subVectors(moveDPrime[i][j][k], points[i][j][k].position);
+                moveD[i][j][k].normalize();
+                points[i][j][k].translateOnAxis ( moveD[i][j][k], 10);
+
+          }
+        }
+      }
+    if ( keyboard.pressed("space") ) {
+      for (let i = 0; i < M; i++) {
+        for (let j = 0; j < N; j++)
+        for (let k = 0; k < K; k++) {
+
+              //moveDPrime[i][j][k] = inversion(moveDPrime[i][j][k], gamma, radius);
+              moveD[i][j][k].subVectors(moveDPrime[i][j][k], points[i][j][k].position);
+              moveD[i][j][k].normalize();
+              points[i][j][k].translateOnAxis ( moveD[i][j][k], 10);
+        }
+      }
+    }
+
+    if ( keyboard.pressed("X") ) {
+      sizeBall += 0.01;
+      for (let i = 0; i < M; i++) {
+        for (let j = 0; j < N; j++)
+        for (let k = 1; k < K; k++) {
+              points[i][j][k].scale.set(sizeBall, sizeBall, sizeBall);
+        }
+      }
+    }
+
+    if ( keyboard.pressed("Z") ) {
+      sizeBall -= 0.01;
+      for (let i = 0; i < M; i++) {
+        for (let j = 0; j < N; j++)
+        for (let k = 1; k < K; k++) {
+              points[i][j][k].scale.set(sizeBall, sizeBall, sizeBall);
+        }
+      }
+    }
+
+    if ( keyboard.pressed("V") ) {
+      for (let i = 0; i < M; i++) {
+        for (let j = 0; j < N; j++)
+        for (let k = 0; k < K; k++) {
+
+
+              //moveD[i][j][k].subVectors(new THREE.Vector3(100 * i, 2 * k * (i*i  +  j*j), 100 * j), points[i][j][k].position);
+
+              let ii = i - (M/2);
+              let jj = j - (N/2);
+              moveD[i][j][k].subVectors(new THREE.Vector3(
+                ii*50,  0.5*k*((ii*ii)+(jj*jj)),  jj*50),
+                points[i][j][k].position);
+              //moveDPrime[i][j][k].y = 0;
+              moveD[i][j][k].normalize();
+              points[i][j][k].translateOnAxis ( moveD[i][j][k], 10);
+              //points[i][j][k].scale.set(0.5 + epsilon, 0.5 + epsilon, 0.5 + epsilon);
+        }
+      }
+    }
+
+    if ( keyboard.pressed("C") ) {
+      for (let i = 0; i < M; i++) {
+        for (let j = 0; j < N; j++)
+        for (let k = 0; k < K; k++) {
+
+
+              //moveD[i][j][k].subVectors(new THREE.Vector3(100 * i, 2 * k * (i*i  +  j*j), 100 * j), points[i][j][k].position);
+
+              let ii = i - (M/2);
+              let jj = j - (N/2);
+              moveD[i][j][k].subVectors(new THREE.Vector3(
+                ii*50, 100*k,  jj*50),
+                points[i][j][k].position);
+              //moveDPrime[i][j][k].y = 0;
+              moveD[i][j][k].normalize();
+              points[i][j][k].translateOnAxis ( moveD[i][j][k], 10);
+              //points[i][j][k].scale.set(0.5 + epsilon, 0.5 + epsilon, 0.5 + epsilon);
+        }
+      }
+    }
+
+    if ( keyboard.pressed("M") ) {
+      rot += epsilon;
+      for (let i = 0; i < M; i++) {
+        for (let j = 0; j < N; j++)
+        for (let k = 1; k < K; k++) {
+
+
+              //moveD[i][j][k].subVectors(new THREE.Vector3(100 * i, 2 * k * (i*i  +  j*j), 100 * j), points[i][j][k].position);
+
+              moveD[i][j][k].subVectors(new THREE.Vector3(
+                (bigR - k*smallR*Math.cos(0.31415 * (i + rot)))*Math.cos(0.31415*j),
+                (bigR - k*smallR*Math.cos(0.31415 * (i + rot)))*Math.sin(0.31415*j),
+                                            k*smallR * Math.sin(0.31415 * (i + rot))), points[i][j][k].position);
+              //moveDPrime[i][j][k].y = 0;
+              moveD[i][j][k].normalize();
+              points[i][j][k].translateOnAxis ( moveD[i][j][k], 10);
+              //points[i][j][k].scale.set(0.5 + epsilon, 0.5 + epsilon, 0.5 + epsilon);
+        }
+      }
+    }
+
+    if ( keyboard.pressed("B") ) {
+      rot0 += epsilon;
+      for (let i = 0; i < M; i++) {
+        for (let j = 0; j < N; j++)
+        for (let k = 1; k < K; k++) {
+
+
+              //moveD[i][j][k].subVectors(new THREE.Vector3(100 * i, 2 * k * (i*i  +  j*j), 100 * j), points[i][j][k].position);
+
+              moveD[i][j][k].subVectors(new THREE.Vector3(
+                (bigR - k*smallR*Math.cos(0.31415 * (i + rot)))*Math.cos(0.31415*j+rot0),
+                (bigR - k*smallR*Math.cos(0.31415 * (i + rot)))*Math.sin(0.31415*j+rot0),
+                                            k*smallR * Math.sin(0.31415*(i + rot))), points[i][j][k].position);
+              //moveDPrime[i][j][k].y = 0;
+              moveD[i][j][k].normalize();
+              points[i][j][k].translateOnAxis ( moveD[i][j][k], 10);
+              //points[i][j][k].scale.set(0.5 + epsilon, 0.5 + epsilon, 0.5 + epsilon);
+        }
+      }
+    }
+
+    if ( keyboard.pressed("N") ) {
+      for (let i = 0; i < M; i++) {
+        for (let j = 0; j < N; j++)
+        for (let k = 1; k < K; k++) {
+
+
+          moveD[i][j][k].subVectors(new THREE.Vector3(
+            (bigR - k*smallR*Math.cos(0.31415 * (i + rot)))*Math.cos(0.31415*j),
+            (bigR - k*smallR*Math.cos(0.31415 * (i + rot)))*Math.sin(0.31415*j),
+                                        k*smallR * Math.sin(0.31415*(i + rot))), points[i][j][k].position);
+              moveD[i][j][k].normalize();
+              moveD[i][j][k].multiplyScalar(-1);
+              points[i][j][k].translateOnAxis ( moveD[i][j][k], 10);
+              //points[i][j][k].scale.set(0.5 + epsilon, 0.5 + epsilon, 0.5 + epsilon);
+        }
+      }
+    }
+
+    if ( keyboard.pressed("U") )
+      sphere00.scale.set(mesh2.scale.x + epsilon, mesh2.scale.y + epsilon, mesh2.scale.z + epsilon);
+
     // rotate left/right/up/down
     var rotation_matrix = new THREE.Matrix4().identity();
     if ( keyboard.pressed("A") )
     mesh2.rotateOnAxis( new THREE.Vector3(0,1,0), rotateAngle);
     if ( keyboard.pressed("D") )
     mesh2.rotateOnAxis( new THREE.Vector3(0,1,0), -rotateAngle);
-    if ( keyboard.pressed("up") )
-    mesh2.rotateOnAxis( new THREE.Vector3(1,0,0), rotateAngle);
-    if ( keyboard.pressed("down") )
-    mesh2.rotateOnAxis( new THREE.Vector3(1,0,0), -rotateAngle);
+    //if ( keyboard.pressed("up") )
+    //mesh2.rotateOnAxis( new THREE.Vector3(1,0,0), rotateAngle);
+    //if ( keyboard.pressed("down") )
+    //mesh2.rotateOnAxis( new THREE.Vector3(1,0,0), -rotateAngle);
 
-    if ( keyboard.pressed("Z") ) {
-      mesh2.position.set(0,25.1,0);
-      mesh2.rotation.set(0,0,0);
+    //if ( keyboard.pressed("Z") ) {
+    //  mesh2.position.set(0,25.1,0);
+    //  mesh2.rotation.set(0,0,0);
+    //}
+
+    var relativeCameraOffset = new THREE.Vector3(-100, 0, 200);
+    var cameraOffset = relativeCameraOffset.applyMatrix4( mesh2.matrixWorld );
+
+    if ( keyboard.pressed("E") ) {
+      camT += 0.01;
     }
 
-    var relativeCameraOffset = new THREE.Vector3(0,100,400);
-    var cameraOffset = relativeCameraOffset.applyMatrix4( mesh2.matrixWorld );
-    camera.position.x = cameraOffset.x;
-    camera.position.y = cameraOffset.y;
-    camera.position.z = cameraOffset.z;
-    camera.lookAt( mesh2.position );
+    if ( keyboard.pressed("Q") ) {
+      camT -= 0.01;
+    }
+
+    if ( keyboard.pressed("R") )
+      camR += 1;
+
+      if ( keyboard.pressed("T") )
+        camR -= 1;
+    if ( keyboard.pressed("up") )
+      camH += 1;
+    if ( keyboard.pressed("down") )
+      camH -= 1;
+
+    camera.position.x = camR*Math.cos(camT + (3.141592*1.25));
+    camera.position.z = camR*Math.sin(camT + (3.141592*1.25));
+    camera.position.y = camH;
+
+    //camera.position.z = cameraOffset.z;
+    camera.lookAt( new THREE.Vector3(0, 0, 0) );
 
     stats.update();
   }
