@@ -1,0 +1,15 @@
+
+
+body {
+  background: linear-gradient(#141e30, #243b55);
+  background-size: cover;
+  background-repeat: no-repeat;
+  font-family: sans-serif;
+  margin: 0%;
+  
+}
+
+.invertir-color {
+  -webkit-filter: invert(100%);
+ filter: invert(100%);
+}
