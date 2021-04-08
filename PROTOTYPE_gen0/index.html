@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Labeled Geometry (Three.js)</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<link rel=stylesheet href="css/base.css"/>
+</head>
+<body>
+
+<div id="message"></div>
+
+<script src="js/Three.js"></script>
+<script src="js/Detector.js"></script>
+<script src="js/Stats.js"></script>
+<script src="js/OrbitControls.js"></script>
+<script src="js/THREEx.KeyboardState.js"></script>
+<script src="js/THREEx.FullScreen.js"></script>
+<script src="js/THREEx.WindowResize.js"></script>
+
+<!-- jQuery code to display an information button and box when clicked. -->
+<script src="js/jquery-1.9.1.js"></script>
+<script src="js/jquery-ui.js"></script>
+<link rel=stylesheet href="css/jquery-ui.css" />
+<link rel=stylesheet href="css/info.css"/>
+<script src="js/info.js"></script>
+<div id="infoButton"></div>
+<div id="infoBox" title="Demo Information">
+This three.js demo is part of a collection at
+<a href="http://stemkoski.github.io/Three.js/">http://stemkoski.github.io/Three.js/</a>
+</div>
+<!-- ------------------------------------------------------------ -->
+
+<div id="ThreeJS" style="position: absolute; left:0px; top:0px"></div>
+<script>
+/*
+	Three.js "tutorials by example"
+	Author: Lee Stemkoski
+	Date: July 2013 (three.js v59dev)
+*/
+
+// MAIN
+
+// standard global variables
+var container, scene, camera, renderer, controls, stats;
+var keyboard = new THREEx.KeyboardState();
+var clock = new THREE.Clock();
+
+// custom global variables
+var cube;
+var targetList = [];
+var projector, mouse = { x: 0, y: 0 }, INTERSECTED;
+var sprite1;
+var canvas1, context1, texture1;
+
+var TIME = 0.0;
+var rot = 0.0;
+var bigR = 400;
+var smallR = 200;
+var camT = 0.0;
+var camR = 1000;
+var camH = 500;
+
+var points = [];
+var moveD = [];
+var moveDPrime = [];
+var M = 20;
+var N = 20;
+var K = 2;
+var gamma = new THREE.Vector3(0, 0, 0);
+var TARGETPOS = new THREE.Vector3(0, 0, 0);
+var radius = 500;
+
+init();
+animate();
+
+// FUNCTIONS
+function init()
+{
+	/////////////// SCENE
+	scene = new THREE.Scene();
+	/////////////// CAMERA
+	var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
+	var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 20000;
+	camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR);
+	scene.add(camera);
+	camera.position.set(-1000, 500, -1000);
+	camera.lookAt(scene.position);
+	//////////////// RENDERER
+	if ( Detector.webgl )
+		renderer = new THREE.WebGLRenderer( {antialias:true} );
+	else
+		renderer = new THREE.CanvasRenderer();
+	renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+	container = document.getElementById( 'ThreeJS' );
+	container.appendChild( renderer.domElement );
+	/////////////// EVENTS
+	THREEx.WindowResize(renderer, camera);
+	THREEx.FullScreen.bindKey({ charCode : 'm'.charCodeAt(0) });
+	///////////// CONTROLS
+	//controls = new THREE.OrbitControls( camera, renderer.domElement );
+	///////////// STATS
+	stats = new Stats();
+	stats.domElement.style.position = 'absolute';
+	stats.domElement.style.bottom = '0px';
+	stats.domElement.style.zIndex = 100;
+	container.appendChild( stats.domElement );
+	////////////LIGHT
+	var light = new THREE.PointLight(0xffffff);
+	light.position.set(0,250,0);
+	scene.add(light);
+
+	////////////SKYBOX/FOG
+	var skyBoxGeometry = new THREE.CubeGeometry( 10000, 10000, 10000 );
+	var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.BackSide } );
+	var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
+	scene.add(skyBox);
+
+	///////////MATERIAL LIST///USED FOR PAINTING OBJECTS//
+
+	//////////////////////////////////
+	// CUSTOM GEOMETRY FOR USER AREA//
+	//////////////////////////////////
+
+
+	//////////////////////////////////////////////////////////////////////
+	var geometry = new THREE.SphereGeometry( 100, 50, 50 );
+	var icosa = new THREE.IcosahedronGeometry( 250, 0 );
+			icosa.mergeVertices();
+			icosa.computeCentroids();
+	var material = new THREE.MeshNormalMaterial();
+	/////////////////////////////////////////////////////////////////////
+
+	mesh = new THREE.Mesh( geometry, material );
+	mesh.position.set(0,0,0);
+	scene.add(mesh);
+	mesh.visible = false;
+
+	ico = new THREE.Mesh(icosa, material);
+	ico.position.set(0, 0, 0);
+	scene.add( ico );
+	ico.visible = true;
+
+	///////ADDING TAG
+	var spritey0 = makeTextSprite( "LATICE", { fontsize: 64, backgroundColor: {r:255, g:255, b:255, a:1} } );
+	spritey0.position = new THREE.Vector3(0, 150, 0);
+	spritey0.center = new THREE.Vector2(0.5, 0.5);
+	scene.add( spritey0 );
+
+
+	for (var i = 0; i < icosa.faces.length; i++)
+	{
+		let text;
+		if (i == 0) text = " Matemáticas ";
+		if (i == 1) text = " Física ";
+		if (i == 2) text = " Química ";
+		if (i == 3) text = " Filosofía ";
+		if (i == 4) text = " Newton ";
+		if (i == 5) text = " EDP ";
+		if (i == 6) text = " Cálculo ";
+		if (i == 7) text = " Topología ";
+		if (i == 8) text = " Cinemática ";
+		if (i == 9) text = " Nietzsche ";
+		if (i == 10) text = " WII ";
+		if (i == 11) text = " Satan ";
+		if (i == 12) text = " AI ";
+		if (i == 13) text = " Particles ";
+		if (i == 14) text = " Dark ";
+		var spritey = makeTextSprite( text, { fontsize: 32, backgroundColor: {r:100, g:100, b:255, a:1} } );
+		spritey.position = icosa.faces[i].centroid.clone().multiplyScalar(1.1);
+		scene.add( spritey );
+	}
+
+	///////SPHERES ARRAY
+
+
+	for (let i = 0; i < icosa.faces.length; i++) {
+
+						points[i] = new THREE.Mesh( geometry, material );
+            points[i].position.set(
+							icosa.faces[i].centroid.x * 1.2,
+							icosa.faces[i].centroid.y * 1.2,
+							icosa.faces[i].centroid.z * 1.2);
+            points[i].scale.set(0.1, 0.1, 0.1);
+            scene.add(points[i]);
+	}
+
+	///////EVENT LISTENER
+
+	// initialize object to perform world/screen calculations
+	projector = new THREE.Projector();
+
+	// when the mouse moves, call the given function
+	document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+
+}//////////////////////////////////////	END INIT	////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////// BEGIN FUNCTIONS //////////////////////////////////////////////////////////////////////////////
+function onDocumentMouseDown( event ) {
+	event.preventDefault();
+	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+	var vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
+	projector.unprojectVector( vector, camera );
+	var ray = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+	//var intersects = ray.intersectObjects( targetList );
+	var intersects0;
+	for (let i = 0; i < 12; i++){
+					intersects0 = ray.intersectObject ( points[i], false);
+					if ( intersects0.length > 0 ) {
+							if (i == 0) window.open('http://michelle.esfm.ipn.mx/~mrspock/', '_blank');
+							if (i == 1) window.open('https://en.wikipedia.org/wiki/Quantum_mechanics', '_blank');
+							if (i == 2) window.open('https://en.wikipedia.org/wiki/Chemistry', '_blank');
+							if (i == 3) window.open('https://www.youtube.com/watch?v=sv5IyRuEVI4', '_blank');
+							if (i == 4) window.open('https://en.wikipedia.org/wiki/Isaac_Newton', '_blank');
+							if (i == 5) window.open('http://www.scholarpedia.org/article/Partial_differential_equation', '_blank');
+							if (i == 6) window.open('https://www.ctrl.cinvestav.mx/~gvilla/CalculoIII.pdf', '_blank');
+							if (i == 7) window.open('http://kevinluo.net/books/book_Topology%20-%20James%20R.%20Munkres.pdf', '_blank');
+							if (i == 8) window.open('https://en.wikipedia.org/wiki/The_Cinematics', '_blank');
+							if (i == 9) window.open('https://www.youtube.com/watch?v=sv5IyRuEVI4', '_blank');
+							if (i == 10) window.open('https://www.youtube.com/watch?v=_uk_6vfqwTA', '_blank');
+							if (i == 11) window.open('https://en.wikipedia.org/wiki/Satan', '_blank');
+							if (i == 12) window.open('https://www.youtube.com/watch?v=c0Iqb3OHrXk', '_blank');
+							if (i == 13) window.open('http://michelle.esfm.ipn.mx/~miguel/experiments/', '_blank');
+							if (i == 14) window.open('http://michelle.esfm.ipn.mx/~miguel/SomethingSpecial/main3.html', '_blank');
+					console.log("-->HIT WEBSITE(" + i + ")");
+			}
+	}
+
+}
+
+function toString(v) { return "[ " + v.x + ", " + v.y + ", " + v.z + " ]"; }
+
+function makeTextSprite( message, parameters )
+{
+	if ( parameters === undefined ) parameters = {};
+
+	var fontface = parameters.hasOwnProperty("fontface") ?
+		parameters["fontface"] : "Arial";
+
+	var fontsize = parameters.hasOwnProperty("fontsize") ?
+		parameters["fontsize"] : 18;
+
+	var borderThickness = parameters.hasOwnProperty("borderThickness") ?
+		parameters["borderThickness"] : 4;
+
+	var borderColor = parameters.hasOwnProperty("borderColor") ?
+		parameters["borderColor"] : { r:0, g:0, b:0, a:1.0 };
+
+	var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?
+		parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };
+
+	//var spriteAlignment = parameters.hasOwnProperty("alignment") ?
+	//	parameters["alignment"] : THREE.SpriteAlignment.topLeft;
+
+	var spriteAlignment = THREE.SpriteAlignment.topLeft;
+
+
+	var canvas = document.createElement('canvas');
+	var context = canvas.getContext('2d');
+	context.font = "Bold " + fontsize + "px " + fontface;
+
+	// get size data (height depends only on font size)
+	var metrics = context.measureText( message );
+	var textWidth = metrics.width;
+
+	// background color
+	context.fillStyle   = "rgba(" + backgroundColor.r + "," + backgroundColor.g + ","
+								  + backgroundColor.b + "," + backgroundColor.a + ")";
+	// border color
+	context.strokeStyle = "rgba(" + borderColor.r + "," + borderColor.g + ","
+								  + borderColor.b + "," + borderColor.a + ")";
+
+	context.lineWidth = borderThickness;
+	roundRect(context, borderThickness/2, borderThickness/2, textWidth + borderThickness, fontsize * 1.4 + borderThickness, 6);
+	// 1.4 is extra height factor for text below baseline: g,j,p,q.
+
+	// text color
+	context.fillStyle = "rgba(0, 0, 0, 1.0)";
+
+	context.fillText( message, borderThickness, fontsize + borderThickness);
+
+	// canvas contents will be used for a texture
+	var texture = new THREE.Texture(canvas)
+	texture.needsUpdate = true;
+
+	var spriteMaterial = new THREE.SpriteMaterial(
+		{ map: texture, useScreenCoordinates: false, alignment: spriteAlignment } );
+	var sprite = new THREE.Sprite( spriteMaterial );
+	sprite.scale.set(100,50,1.0);
+	return sprite;
+}
+
+// function for drawing rounded rectangles
+function roundRect(ctx, x, y, w, h, r)
+{
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.lineTo(x+w-r, y);
+    ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+    ctx.lineTo(x+w, y+h-r);
+    ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+    ctx.lineTo(x+r, y+h);
+    ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+    ctx.lineTo(x, y+r);
+    ctx.quadraticCurveTo(x, y, x+r, y);
+    ctx.closePath();
+    ctx.fill();
+	ctx.stroke();
+}
+
+function inversion(DIANA, GAMMA, RADIUS) {
+      let REST = new THREE.Vector3(0, 0, 0);
+      let d = DIANA.distanceTo (GAMMA);
+      let check = Math.sqrt((d - RADIUS) * (d - RADIUS));
+
+      if (check < 1e-20) {}
+      else {
+        let dd = (RADIUS * RADIUS)/d;
+        REST.subVectors(DIANA, GAMMA);
+        REST.normalize();
+        REST.multiplyScalar ( dd );
+        DIANA.addVectors(REST, GAMMA);
+      }
+
+      return DIANA;
+}
+//////////////////////////////////////////////END FUNCTIONS////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function animate()
+{
+  requestAnimationFrame( animate );
+	render();
+	update();
+}
+
+function update()
+{
+
+	//keyboard.update();
+	TIME += 0.01;
+
+				if ( keyboard.pressed("E") ) {
+	      	camT += 0.01;
+				 	console.log("camT := " + camT);
+	    	}
+
+	    	if ( keyboard.pressed("Q") ) {
+	      		camT -= 0.01;
+	    	 }
+
+	    	if ( keyboard.pressed("R") )
+	      	camR += 5;
+
+	      if ( keyboard.pressed("T") )
+	        camR -= 5;
+	    	if ( keyboard.pressed("up") )
+	      	camH += 5;
+	    	if ( keyboard.pressed("down") )
+	      	camH -= 5;
+
+	    camera.position.x = camR*Math.cos(camT + (3.141592*1.25));
+	    camera.position.z = camR*Math.sin(camT + (3.141592*1.25));
+	    camera.position.y = camH;
+
+	    //camera.position.z = cameraOffset.z;
+	    camera.lookAt( new THREE.Vector3(0, 0, 0) );
+
+	//controls.update();
+	stats.update();
+}
+
+function render()
+{
+	renderer.render( scene, camera );
+}
+
+</script>
+
+</body>
+</html>
