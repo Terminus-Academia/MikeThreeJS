@@ -112,7 +112,7 @@ function init()
 
 	////////////SKYBOX/FOG
 	var skyBoxGeometry = new THREE.CubeGeometry( 10000, 10000, 10000 );
-	var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.BackSide } );
+	var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0xee82ee, side: THREE.BackSide } );
 	var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
 	scene.add(skyBox);
 
@@ -153,13 +153,13 @@ function init()
 		let text;
 		if (i == 0) text = " Matemáticas ";
 		if (i == 1) text = " Física ";
-		if (i == 2) text = " Química ";
-		if (i == 3) text = " Filosofía ";
-		if (i == 4) text = " Newton ";
+		if (i == 2) text = " 600Edges ";
+		if (i == 3) text = " 600Vertices";
+		if (i == 4) text = " 600Faces ";
 		if (i == 5) text = " EDP ";
 		if (i == 6) text = " Cálculo ";
 		if (i == 7) text = " Topología ";
-		if (i == 8) text = " Cinemática ";
+		if (i == 8) text = " 600Cells ";
 		if (i == 9) text = " Nietzsche ";
 		if (i == 10) text = " WII ";
 		if (i == 11) text = " Satan ";
@@ -215,8 +215,17 @@ function init()
 
 
 
+function download(txtFile) {
+  var element = document.createElement('a');
+  element.setAttribute('href', txtFile);
 
+  element.style.display = 'none';
+  document.body.appendChild(element);
 
+  element.click();
+
+  document.body.removeChild(element);
+}
 
 
 
@@ -239,14 +248,15 @@ function onDocumentMouseDown( event ) {
 					if ( intersects0.length > 0 ) {
 							if (i == 0) window.open('http://michelle.esfm.ipn.mx/~mrspock/', '_blank');
 							if (i == 1) window.open('https://en.wikipedia.org/wiki/Quantum_mechanics', '_blank');
-							if (i == 2) window.open('https://en.wikipedia.org/wiki/Chemistry', '_blank');
-							if (i == 3) window.open('https://www.youtube.com/watch?v=sv5IyRuEVI4', '_blank');
-							if (i == 4) window.open('https://en.wikipedia.org/wiki/Isaac_Newton', '_blank');
+							if (i == 2) download("edges.txt");
+							if (i == 3) download("vertex.txt");
+							if (i == 4) download("faces.txt");
 							if (i == 5) window.open('http://www.scholarpedia.org/article/Partial_differential_equation', '_blank');
 							if (i == 6) window.open('https://www.ctrl.cinvestav.mx/~gvilla/CalculoIII.pdf', '_blank');
 							if (i == 7) window.open('http://kevinluo.net/books/book_Topology%20-%20James%20R.%20Munkres.pdf', '_blank');
-							if (i == 8) window.open('https://en.wikipedia.org/wiki/The_Cinematics', '_blank');
-							if (i == 9) window.open('https://www.youtube.com/watch?v=sv5IyRuEVI4', '_blank');
+							//document.getElementById('download').click();
+							if (i == 8) download("cells.txt");
+							if (i == 9) download("vertex.txt");
 							if (i == 10) window.open('https://www.youtube.com/watch?v=_uk_6vfqwTA', '_blank');
 							if (i == 11) window.open('https://en.wikipedia.org/wiki/Satan', '_blank');
 							if (i == 12) window.open('https://www.youtube.com/watch?v=c0Iqb3OHrXk', '_blank');
@@ -358,35 +368,6 @@ function inversion(DIANA, GAMMA, RADIUS) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function animate()
 {
   requestAnimationFrame( animate );
@@ -400,9 +381,9 @@ function update()
 	//keyboard.update();
 	TIME += 0.01;
 
-				if ( keyboard.pressed("E") ) {
-	      	camT += 0.01;
-				 	console.log("camT := " + camT);
+		if ( keyboard.pressed("E") ) {
+	      		camT += 0.01;
+			console.log("camT := " + camT);
 	    	}
 
 	    	if ( keyboard.pressed("Q") ) {
@@ -410,14 +391,16 @@ function update()
 	    	 }
 
 	    	if ( keyboard.pressed("R") )
-	      	camR += 5;
+	      		camR += 5;
 
-	      if ( keyboard.pressed("T") )
-	        camR -= 5;
-	    	if ( keyboard.pressed("up") )
-	      	camH += 5;
-	    	if ( keyboard.pressed("down") )
-	      	camH -= 5;
+	      	if ( keyboard.pressed("T") )
+	        	camR -= 5;
+	    	
+		if ( keyboard.pressed("up") )
+	      		camH += 5;
+	    	
+		if ( keyboard.pressed("down") )
+	      		camH -= 5;
 
 	    camera.position.x = camR*Math.cos(camT + (3.141592*1.25));
 	    camera.position.z = camR*Math.sin(camT + (3.141592*1.25));
