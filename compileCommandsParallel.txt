@@ -1,0 +1,3 @@
+mpic++ 43parallel.cpp -o go -pthread -std=c++11;
+time mpirun -np 1 ./go file.txt
+povray hyperbolic04228.pov +W600 +H450; eog hyperbolic04228.png
